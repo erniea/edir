@@ -3,7 +3,7 @@ package edir
 import (
 	"component"
 
-	"fyne.io/fyne/widget"
+	"fyne.io/fyne"
 )
 
 //Edir Main App
@@ -20,6 +20,6 @@ func NewEdirApp() (edir *Edir) {
 }
 
 //GetWidget from app
-func (app *Edir) GetWidget() *widget.Box {
+func (app *Edir) GetWidget() fyne.CanvasObject {
 	return app.Tab.GetWidget()
 }

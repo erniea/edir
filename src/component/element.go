@@ -2,18 +2,25 @@ package component
 
 import (
 	"os"
+	"strconv"
 	"strings"
+	"time"
 
+	"fyne.io/fyne"
+	"fyne.io/fyne/layout"
 	"fyne.io/fyne/widget"
 )
 
 //Element of folder
 type Element struct {
-	Name        string        // path
-	Ext         string        // extension
-	IsDirectory bool          // dir
-	HBox        *widget.Box   // Hbox
-	Indicator   *widget.Label // Selected Indicator
+	ToParent    bool
+	Name        string // path
+	Ext         string // extension
+	IsDirectory bool   // dir
+	FileSize    int64  //
+	EditDate    time.Time
+
+	Indicator *widget.Label // Selected Indicator
 }
 
 //NewElement New Element
@@ -27,6 +34,8 @@ func NewElement(fileInfo os.FileInfo) (elm *Element) {
 		} else {
 			elm = &Element{Name: fullName}
 		}
+		elm.FileSize = fileInfo.Size()
+		elm.EditDate = fileInfo.ModTime()
 	} else {
 		elm = &Element{Name: fullName, IsDirectory: true}
 	}
@@ -34,10 +43,32 @@ func NewElement(fileInfo os.FileInfo) (elm *Element) {
 	return
 }
 
-//ToHBox to Hbox
-func (elm *Element) ToHBox() *widget.Box {
+//GetWidget to Hbox
+func (elm *Element) GetWidget(pageCount int) (hBox fyne.CanvasObject) {
+	AdditionalInfo := "[DIR]"
+	if !elm.IsDirectory {
+		size := elm.FileSize
+		sizeIdx := 0
+		sizePostfix := []string{"", "KiB", "MiB", "GiB", "TiB"}
+		for {
+			if size < 1024 {
+				AdditionalInfo = strconv.FormatInt(size, 10) + " " + sizePostfix[sizeIdx]
+				break
+			} else {
+				size = size / 1024
+				sizeIdx++
+			}
+		}
+	}
 
+	nameLabel := widget.NewLabel(elm.Name)
 	elm.Indicator = widget.NewLabel(" ")
-	elm.HBox = widget.NewHBox(widget.NewLabel(elm.Name), elm.Indicator, widget.NewLabel(elm.Ext))
-	return elm.HBox
+	extLabel := widget.NewLabel(elm.Ext)
+	additionalLabel := widget.NewLabel(AdditionalInfo)
+
+	additionalLabel.Alignment = fyne.TextAlignTrailing
+
+	layout.NewHBoxLayout()
+	hBox = widget.NewHBox(nameLabel, layout.NewSpacer(), elm.Indicator, extLabel, additionalLabel)
+	return
 }
